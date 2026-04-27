@@ -1,0 +1,53 @@
+import 'dart:io';
+
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+
+import 'tables/accounts_table.dart';
+import 'tables/budgets_table.dart';
+import 'tables/categories_table.dart';
+import 'tables/merchant_rules_table.dart';
+import 'tables/savings_goals_table.dart';
+import 'tables/t212_holdings_table.dart';
+import 'tables/t212_transactions_table.dart';
+import 'tables/tax_entries_table.dart';
+import 'tables/transactions_table.dart';
+
+part 'app_database.g.dart';
+
+@DriftDatabase(
+  tables: [
+    TransactionsTable,
+    CategoriesTable,
+    MerchantRulesTable,
+    AccountsTable,
+    BudgetsTable,
+    SavingsGoalsTable,
+    TaxEntriesTable,
+    T212HoldingsTable,
+    T212TransactionsTable,
+  ],
+)
+class AppDatabase extends _$AppDatabase {
+  AppDatabase() : super(_openConnection());
+
+  @override
+  int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (migrator) async {
+          await migrator.createAll();
+        },
+      );
+}
+
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final file = File(p.join(documentsDirectory.path, 'vaultly.sqlite'));
+    return NativeDatabase(file);
+  });
+}
